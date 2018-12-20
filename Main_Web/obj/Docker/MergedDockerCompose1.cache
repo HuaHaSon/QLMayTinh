@@ -1,0 +1,71 @@
+networks:
+  default:
+    external:
+      name: nat
+services:
+  customer.api:
+    build:
+      context: D:\Documents\4th Year\1st Semester\Open-sourced Apps\Docker\Demo\Main_Web
+      dockerfile: Services/QLKhachHang/Dockerfile
+    depends_on:
+    - seeder.app
+    environment:
+      ConnectionString: Server=sql.data;Initial Catalog=DockerDemo;User Id=sa;Password=Password1
+    image: qlkhachhang
+    ports:
+    - published: 8001
+      target: 80
+    restart: on-failure
+  main_web:
+    build:
+      context: D:\Documents\4th Year\1st Semester\Open-sourced Apps\Docker\Demo\Main_Web
+      dockerfile: Main_Web\Dockerfile
+    depends_on:
+    - customer.api
+    - product.api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionString: Server=sql.data;Initial Catalog=DockerDemo;User Id=sa;Password=Password1
+      CustomerUrl: http://customer.api
+      ProductUrl: http://product.api
+    image: mainweb
+    ports:
+    - published: 8000
+      target: 80
+    - target: 80
+    restart: on-failure
+  product.api:
+    build:
+      context: D:\Documents\4th Year\1st Semester\Open-sourced Apps\Docker\Demo\Main_Web
+      dockerfile: Services/QLSanPham/Dockerfile
+    depends_on:
+    - seeder.app
+    environment:
+      ConnectionString: Server=sql.data;Initial Catalog=DockerDemo;User Id=sa;Password=Password1
+    image: qlsanpham
+    ports:
+    - published: 8002
+      target: 80
+    restart: on-failure
+  seeder.app:
+    build:
+      context: D:\Documents\4th Year\1st Semester\Open-sourced Apps\Docker\Demo\Main_Web
+      dockerfile: Services/Seeder/Dockerfile
+    depends_on:
+    - sql.data
+    environment:
+      ConnectionString: Server=sql.data;Initial Catalog=DockerDemo;User Id=sa;Password=Password1
+    image: seeder
+    ports:
+    - published: 8003
+      target: 80
+    restart: on-failure
+  sql.data:
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: Password1
+    image: microsoft/mssql-server-windows-express
+    ports:
+    - published: 1433
+      target: 1433
+version: '3.4'

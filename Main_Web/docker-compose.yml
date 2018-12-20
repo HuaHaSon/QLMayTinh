@@ -1,0 +1,65 @@
+version: '3.4'
+
+services:
+  main_web:
+    image: mainweb
+    build:
+      context: .
+      dockerfile: Main_Web\Dockerfile
+    environment:
+      - ConnectionString=Server=sql.data;Initial Catalog=DockerDemo;User Id=sa;Password=Password1
+      - CustomerUrl=http://customer.api
+      - ProductUrl=http://product.api
+    ports:
+      - "8000:80"
+    restart: on-failure
+    depends_on:
+      - customer.api
+      - product.api
+
+  customer.api:
+    image: qlkhachhang
+    build:
+      context: .
+      dockerfile: Services/QLKhachHang/Dockerfile
+    environment:
+      - ConnectionString=Server=sql.data;Initial Catalog=DockerDemo;User Id=sa;Password=Password1
+    ports:
+      - "8001:80"
+    restart: on-failure
+    depends_on:
+      - seeder.app
+
+  product.api:
+    image: qlsanpham
+    build:
+      context: .
+      dockerfile: Services/QLSanPham/Dockerfile
+    environment:
+      - ConnectionString=Server=sql.data;Initial Catalog=DockerDemo;User Id=sa;Password=Password1
+    ports:
+      - "8002:80"
+    restart: on-failure
+    depends_on:
+      - seeder.app
+
+  seeder.app:
+    image: seeder
+    build:
+      context: .
+      dockerfile: Services/Seeder/Dockerfile
+    environment:
+      - ConnectionString=Server=sql.data;Initial Catalog=DockerDemo;User Id=sa;Password=Password1
+    ports:
+      - "8003:80"
+    restart: on-failure
+    depends_on:
+      - sql.data
+
+  sql.data:
+    image: microsoft/mssql-server-windows-express
+    ports:
+      - "1433:1433"
+    environment:
+      - SA_PASSWORD=Password1
+      - ACCEPT_EULA=Y
